@@ -25,6 +25,7 @@ two places:
 """
 
 from logging import getLogger
+from zope.schema import ValidationError
 
 import re
 
@@ -38,20 +39,14 @@ logger = getLogger("jazkarta.hotfixes")
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9_@.\-/]*$")
 
 
-def _import_validation_error():
-    # Imported lazily so this module stays importable without a full Zope stack.
-    from zope.schema import ValidationError
-
-    class InvalidTALESName(ValidationError):
-        __doc__ = "Only letters, digits and the characters _ @ . - / are allowed."
-
-    return InvalidTALESName
+class InvalidTALESName(ValidationError):
+    __doc__ = "Only letters, digits and the characters _ @ . - / are allowed."
 
 
 def valid_name(value):
     """Raise if ``value`` is not a safe, plain traversal name."""
     if value and not _SAFE_NAME.match(value):
-        raise _import_validation_error()(value)
+        raise InvalidTALESName(value)
     return True
 
 
