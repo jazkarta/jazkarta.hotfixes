@@ -62,15 +62,15 @@ after deploying** to confirm all three patches applied.
 Installation
 ===========
 
-Add the source and egg to the buildout. With ``mr.developer`` (as this project
-uses), add to ``cfg/sources.cfg``::
+Add ``jazkarta.hotfixes`` to the ``eggs`` of the instance part of your
+buildout (or to the ``install_requires`` of a policy egg that is already
+installed on the instance), then rerun buildout and restart Zope.
+
+To track this repository as a development source with ``mr.developer``, add to
+your sources config::
 
     [sources]
-    jazkarta.hotfixes = fs jazkarta.hotfixes
-
-and add ``jazkarta.hotfixes`` to the ``eggs`` of the instance part (or to
-the ``install_requires`` of ``mtneers.policy``, which is already an instance
-egg). Then rerun buildout and restart Zope.
+    jazkarta.hotfixes = git git@github.com:jazkarta/jazkarta.hotfixes.git
 
 Tunables (environment variables)
 ===============================
@@ -81,7 +81,7 @@ Variable                                      Default    Effect
 ``MAXIMUM_RSS_FEED_SIZE_BYTES``               1000000    Max bytes read per RSS feed
 ``MAXIMUM_ICAL_IMPORT_SIZE_BYTES``            500000     Max bytes read per ical url
 ``MAXIMUM_ICAL_IMPORT_EVENTS``                366        Max events per ical resource
-``MTNEERS_DOWNLOAD_TIMEOUT``                  3.5        Connect+read timeout (seconds)
+``HOTFIXES_DOWNLOAD_TIMEOUT``                 3.5        Connect+read timeout (seconds)
 ============================================  =========  ==================================
 
 Removing the patches

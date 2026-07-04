@@ -48,7 +48,7 @@ MAXIMUM_ICAL_IMPORT_EVENTS = int(
 
 # A connect+read timeout of slightly more than 3 seconds is recommended by the
 # requests documentation, so a dropped SYN/ACK gets one retry within the window.
-DOWNLOAD_TIMEOUT = float(os.getenv("MTNEERS_DOWNLOAD_TIMEOUT", 3.5))
+DOWNLOAD_TIMEOUT = float(os.getenv("HOTFIXES_DOWNLOAD_TIMEOUT", 3.5))
 
 
 class TooManyEventsToImport(ValueError):
