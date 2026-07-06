@@ -4,6 +4,10 @@ Changelog
 1.0 (unreleased)
 ----------------
 
+- The limited download helper accumulates chunks against a total byte cap
+  instead of upstream's single-chunk read, which on the urllib3 1.26.x used
+  with Plone 5.2 silently truncates chunked transfer-encoded responses.
+
 - Initial release. Backports for:
 
   - GHSA-rr49-f9g6-c9r5 -- Classic portlet TALES injection (plone.app.portlets).

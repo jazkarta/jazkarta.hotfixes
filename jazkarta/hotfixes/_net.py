@@ -190,12 +190,19 @@ def download_limited(url, limit, headers=None):
     if length and int(length) > limit:
         raise ValueError("Content-Length header too large")
 
-    # Read at most ``limit + 1`` bytes. Using a chunk size of ``limit + 1`` means
-    # a well-sized body arrives in a single chunk (<= limit, returned as-is),
-    # while an oversized body trips the guard on the first chunk. Internally this
-    # may use multiple chunked reads.
-    chunk = b""
-    for chunk in response.iter_content(limit + 1):
-        if len(chunk) > limit:
+    # Read in pieces, refusing as soon as the running total exceeds ``limit``.
+    # Upstream instead does a single ``iter_content(limit + 1)`` read and keeps
+    # only the last piece -- correct on the urllib3 2.x used by Plone 6, where
+    # reads buffer to exactly the requested size, but on the urllib3 1.26.x
+    # used with Plone 5.2 a Transfer-Encoding: chunked response yields one
+    # piece per server chunk, which would silently truncate the body to its
+    # final chunk. Accumulating is correct on both. The modest read size also
+    # bounds the memory spike when a compressed body is decompressed piecewise.
+    parts = []
+    total = 0
+    for chunk in response.iter_content(65536):
+        total += len(chunk)
+        if total > limit:
             raise ValueError("Downloaded too much content.")
-    return chunk, response
+        parts.append(chunk)
+    return b"".join(parts), response

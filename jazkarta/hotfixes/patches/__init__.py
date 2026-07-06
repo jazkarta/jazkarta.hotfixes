@@ -21,13 +21,18 @@ def _log_target_versions():
 
     # These are the last releases of the Plone 5.2 lines, and are the versions
     # these patches were written against. Anything else should be looked at.
-    expected = {"plone.app.portlets": "4.4.8", "plone.app.event": "3.2.14"}
-    for dist, want in expected.items():
+    # plone.app.portlets 4.4.9 differs from 4.4.8 only in an unrelated template
+    # (login.pt); the patched modules are byte-identical between the two.
+    expected = {
+        "plone.app.portlets": ("4.4.8", "4.4.9"),
+        "plone.app.event": ("3.2.14",),
+    }
+    for dist, wants in expected.items():
         try:
             have = pkg_resources.get_distribution(dist).version
         except Exception:
             continue
-        if have == want:
+        if have in wants:
             logger.info("jazkarta.hotfixes: %s %s (expected).", dist, have)
         else:
             logger.warning(
@@ -35,7 +40,7 @@ def _log_target_versions():
                 "%s. Review the patches before trusting them.",
                 dist,
                 have,
-                want,
+                " / ".join(wants),
             )
 
 

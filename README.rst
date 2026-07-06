@@ -8,15 +8,16 @@ end-of-life Plone 5.2 package lines, for which the Plone security team shipped
 
 This package targets:
 
-============================  =================  ===========================
-Package                       Version on 5.2     Fix backported from
-============================  =================  ===========================
-``plone.app.portlets``        ``4.4.8``          ``7.0.2`` (Plone 6.2)
-``plone.app.event``           ``3.2.14``         ``6.0.1`` (Plone 6.2)
-============================  =================  ===========================
+============================  ===================  ===========================
+Package                       Version on 5.2       Fix backported from
+============================  ===================  ===========================
+``plone.app.portlets``        ``4.4.8``/``4.4.9``  ``7.0.2`` (Plone 6.2)
+``plone.app.event``           ``3.2.14``           ``6.0.1`` (Plone 6.2)
+============================  ===================  ===========================
 
-Both are the *last* releases of their respective lines, so the source they are
-written against is frozen and will not drift.
+These are the last releases of their respective lines (``4.4.9`` differs from
+``4.4.8`` only in an unrelated template), so the source the patches are written
+against is frozen and will not drift.
 
 Advisories addressed
 ====================
@@ -39,7 +40,7 @@ Advisories addressed
    validated before storage.
 
 How it works
-===========
+============
 
 Importing the package applies the patches as a side effect. The package
 declares the ``z3c.autoinclude`` ``plone`` plugin, so simply having the egg on
@@ -60,7 +61,7 @@ apply, it logs a ``WARNING``/``ERROR`` (the site still starts). **Check the log
 after deploying** to confirm all three patches applied.
 
 Installation
-===========
+============
 
 Add ``jazkarta.hotfixes`` to the ``eggs`` of the instance part of your
 buildout (or to the ``install_requires`` of a policy egg that is already
@@ -73,7 +74,7 @@ your sources config::
     jazkarta.hotfixes = git git@github.com:jazkarta/jazkarta.hotfixes.git
 
 Tunables (environment variables)
-===============================
+================================
 
 ============================================  =========  ==================================
 Variable                                      Default    Effect
@@ -85,10 +86,10 @@ Variable                                      Default    Effect
 ============================================  =========  ==================================
 
 Removing the patches
-===================
+====================
 
 These become unnecessary the moment the site is migrated to a Plone version
 whose ``plone.app.portlets`` / ``plone.app.event`` already contains the fixes
 (portlets >= 5.0.8, event >= 5.2.4). At that point remove the egg. The startup
-version check will warn if the underlying packages move off 4.4.8 / 3.2.14,
-which is your signal to re-review or retire this package.
+version check will warn if the underlying packages move off 4.4.8/4.4.9 /
+3.2.14, which is your signal to re-review or retire this package.
