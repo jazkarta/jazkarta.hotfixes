@@ -22,9 +22,10 @@ The fix (from plone.app.event 6.0.1) applies, adapted to the 3.2.x code:
 * download with a byte cap, a timeout and redirects disabled (so a redirect
   cannot bounce a validated url to an internal one),
 * cap the number of events imported from a single resource, and
-* validate ``event_url`` -- as a field constraint (edit form) and inside the
-  accessor's ``__setattr__`` (which is what the importer uses), dropping any
-  value that is not a plain ``http(s)`` url.
+* validate ``event_url`` -- rejecting the whole import with a visible error if
+  any event has an unsafe URL (checked up front, before any event is created,
+  so nothing is left half-imported), enforced on the edit form via a field
+  constraint, with a drop-and-log safety net on any other accessor write.
 """
 
 from logging import getLogger
@@ -39,6 +40,7 @@ def apply():
     from plone.app.event import _
     from plone.app.event.ical import importer
     from plone.app.event.dx import behaviors
+    from Products.CMFPlone.utils import safe_unicode
     from Products.statusmessages.interfaces import IStatusMessage
 
     from jazkarta.hotfixes._net import (
@@ -61,9 +63,12 @@ def apply():
     # ------------------------------------------------------------------ #
     behaviors.IEventContact["event_url"].constraint = normal_url_validator
 
-    # ... and on every accessor assignment, which is the path the importer
-    #     itself uses (``event.event_url = url``). We drop (rather than raise on)
-    #     an unsafe value so a single bad event does not abort a whole import.
+    # ... and as a non-disruptive safety net on any *other* accessor write
+    #     (programmatic content creation, migrations, ...). Here we drop and log
+    #     rather than raise, so an unrelated bulk operation is never broken by a
+    #     single stray value. The icalendar import path is handled explicitly by
+    #     the pre-flight check in _safe_ical_import below, which surfaces a UI
+    #     error instead of dropping silently.
     _orig_setattr = behaviors.EventAccessor.__setattr__
 
     def _safe_setattr(self, name, value):
@@ -90,12 +95,25 @@ def apply():
         sync_strategy=importer.base.SYNC_KEEP_NEWER,
         limit=MAXIMUM_ICAL_IMPORT_EVENTS,
     ):
-        if limit and limit > 0:
-            # Even a fairly small file could generate thousands of events.
-            cal = importer.icalendar.Calendar.from_ical(ics_resource)
-            count = len(cal.walk("VEVENT"))
-            if count > limit:
-                raise TooManyEventsToImport(count, limit)
+        cal = importer.icalendar.Calendar.from_ical(ics_resource)
+        events = cal.walk("VEVENT")
+        # Even a fairly small file could generate thousands of events.
+        if limit and limit > 0 and len(events) > limit:
+            raise TooManyEventsToImport(len(events), limit)
+        # Pre-flight the event URLs before anything is created or committed.
+        # If any is unsafe we raise Invalid, which the form handler turns into
+        # a visible error.
+        #
+        # NOTE: this deliberately differs from the upstream Plone 6 fix
+        # (plone.app.event 6.0.1). Upstream calls the URL validator per event
+        # *inside* ical_import's loop, which commits per event -- so a bad URL
+        # aborts mid-import and leaves every earlier event already committed (a
+        # partial import). Validating all URLs up front makes the import
+        # all-or-nothing: same rejection and same UI error, but no
+        # half-finished import left behind.
+        for item in events:
+            if "URL" in item:
+                normal_url_validator(safe_unicode(item.decoded("URL")))
         return _orig_ical_import(
             container, ics_resource, event_type, sync_strategy
         )
@@ -172,6 +190,23 @@ def apply():
                 _(
                     "ical_import_too_many_events",
                     default="Refused to import icalendar with too many events.",
+                ),
+                "error",
+            )
+            self.request.response.redirect(self.context.absolute_url())
+            return
+        except Invalid:
+            logger.warning(
+                "Refused ical import from %s: an event has an invalid or "
+                "unsafe URL",
+                ical_import_from,
+            )
+            IStatusMessage(self.request).addStatusMessage(
+                _(
+                    "ical_import_event_validation",
+                    default="Could not import: an event contains an invalid or "
+                    "unsafe URL. Please correct the source calendar and try "
+                    "again.",
                 ),
                 "error",
             )
