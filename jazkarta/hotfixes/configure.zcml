@@ -5,7 +5,7 @@
   <!--
     This package deliberately registers nothing through ZCML. Its patches are
     applied as an import side effect of ``__init__.py``. This file exists so
-    that z3c.autoinclude (target "plone") includes -- and therefore imports --
+    that z3c.autoinclude (target "plone") includes, and therefore imports,
     the package at Zope startup, which is what triggers the patching.
   -->
 
