@@ -11,6 +11,14 @@ _PATCHES = (
     ("classic_portlet", "Classic portlet TALES injection (GHSA-rr49-f9g6-c9r5)"),
     ("rss_portlet", "RSS portlet DoS/SSRF/XSS (GHSA-x5g3-w747-2h8q)"),
     ("ical_import", "icalendar import DoS/SSRF/XSS (GHSA-r82h-mqw3-fc56)"),
+    (
+        "principal_vocabularies",
+        "Users/groups vocabulary disclosure (GHSA-vhwp-qc29-j4xp)",
+    ),
+    (
+        "pillow",
+        "Pillow 9.5 image parsing and JPEG encoding (Pillow 13.0.0 advisories)",
+    ),
 )
 
 _applied = False
@@ -23,9 +31,13 @@ def _log_target_versions():
     # these patches were written against. Anything else should be looked at.
     # plone.app.portlets 4.4.9 differs from 4.4.8 only in an unrelated template
     # (login.pt); the patched modules are byte-identical between the two.
+    # plone.app.content's browser/vocabulary.py is identical in 3.8.10 and
+    # 3.8.11.
     expected = {
         "plone.app.portlets": ("4.4.8", "4.4.9"),
         "plone.app.event": ("3.2.14",),
+        "plone.app.content": ("3.8.10", "3.8.11"),
+        "Pillow": ("9.5.0",),
     }
     for dist, wants in expected.items():
         try:

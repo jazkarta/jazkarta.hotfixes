@@ -30,6 +30,8 @@ setup(
         'feedparser',
         'plone.app.portlets',
         'plone.app.event',
+        'plone.app.content',
+        'Pillow',
         'z3c.form',
         'zope.interface',
         'zope.schema',
