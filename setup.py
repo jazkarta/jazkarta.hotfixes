@@ -35,6 +35,8 @@ setup(
         'z3c.form',
         'zope.interface',
         'zope.schema',
+        'Products.PloneHotfix20261110',
+        'Products.DisableXMLRPC',
     ],
     extras_require={
         'test': [
